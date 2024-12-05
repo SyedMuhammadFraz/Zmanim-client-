@@ -14,7 +14,7 @@ const Dashboard = () => {
           throw new Error('Failed to fetch data');
         }
         const result = await response.json();
-        console.log(result)
+        console.log(result);
         setData(result);
       } catch (err: any) {
         setError(err.message);
@@ -33,4 +33,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default React.memo(Dashboard);
