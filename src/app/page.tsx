@@ -1,10 +1,11 @@
 'use client'; // Ensures this code is client-side only
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 // Fix missing marker icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+delete (L.Icon.Default.prototype as unknown as { _getIconUrl: any })._getIconUrl;
+
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
   iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
@@ -12,6 +13,26 @@ L.Icon.Default.mergeOptions({
 });
 
 export default function Home() {
+  // Set separate active states for each column
+  const [activeType, setActiveType] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+
+  // Toggle active state for Type column
+  const toggleType = (filter: string) => {
+    setActiveType(prev => (prev === filter ? null : filter));
+  };
+
+  // Toggle active state for Category column
+  const toggleCategory = (filter: string) => {
+    setActiveCategory(prev => (prev === filter ? null : filter));
+  };
+
+  // Toggle active state for Filters column
+  const toggleFilter = (filter: string) => {
+    setActiveFilter(prev => (prev === filter ? null : filter));
+  };
+
   useEffect(() => {
     // Check if window is available (to prevent SSR issues)
     if (typeof window === "undefined") return;
@@ -73,11 +94,53 @@ export default function Home() {
               className="p-2 border border-gray-300 rounded-md w-full"
             />
           </div>
+
+          {/* Type Column */}
+          <div className="mt-4">
+            <label className="block text-lg font-semibold mb-2">Type:</label>
+            {['Minyam', 'Business', 'Resturants'].map((filter) => (
+              <button
+                key={filter}
+                onClick={() => toggleType(filter)}
+                className={`px-4 py-2 rounded-md text-sm mr-2 ${
+                  activeType === filter ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                }`}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+
+          {/* Category Column */}
+          <div className="mt-4">
+            <label className="block text-lg font-semibold mb-2">Category:</label>
+            {['Retail', 'Food', 'Health', 'Service', 'Home'].map((filter) => (
+              <button
+                key={filter}
+                onClick={() => toggleCategory(filter)}
+                className={`px-4 py-2 rounded-md text-sm mr-2 ${
+                  activeCategory === filter ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                }`}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+
+          {/* Filters Column */}
           <div className="mt-4">
             <label className="block text-lg font-semibold mb-2">Filters:</label>
-            <span className="px-4 py-2 bg-gray-200 rounded-md text-sm mr-2">New York</span>
-            <span className="px-4 py-2 bg-gray-200 rounded-md text-sm mr-2">Manhattan</span>
-            <span className="px-4 py-2 bg-gray-200 rounded-md text-sm mr-2">Brooklyn</span>
+            {['Bakeries', 'Catering', 'Markets'].map((filter) => (
+              <button
+                key={filter}
+                onClick={() => toggleFilter(filter)}
+                className={`px-4 py-2 rounded-md text-sm mr-2 ${
+                  activeFilter === filter ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                }`}
+              >
+                {filter}
+              </button>
+            ))}
           </div>
         </div>
       </div>
