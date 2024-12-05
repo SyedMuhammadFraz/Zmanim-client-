@@ -46,14 +46,26 @@ export default function Home() {
       attribution: '© OpenStreetMap contributors',
     }).addTo(map);
 
-    // Add markers for multiple locations
-    const locations = [
-      { latitude: 40.7128, longitude: -74.006, label: "New York" },
-      { latitude: 40.7306, longitude: -73.9352, label: "Brooklyn" },
-      { latitude: 40.758, longitude: -73.9855, label: "Times Square" },
+    // Example locations with types (these could be dynamic in a real app)
+    const allLocations = [
+      { latitude: 40.7128, longitude: -74.006, label: "New York", type: "Business", category: "Retail" },
+      { latitude: 40.7306, longitude: -73.9352, label: "Brooklyn", type: "Retail", category: "Food" },
+      { latitude: 40.758, longitude: -73.9855, label: "Times Square", type: "Restaurants", category: "Food" },
+      { latitude: 40.7309, longitude: -73.9977, label: "Soho", type: "Business", category: "Health" },
+      { latitude: 40.749, longitude: -73.9877, label: "Madison Square", type: "Restaurants", category: "Service" }
     ];
 
-    locations.forEach(({ latitude, longitude, label }) => {
+    // Filter locations based on active filters
+    const filteredLocations = allLocations.filter(location => {
+      return (
+        (activeType ? location.type === activeType : true) &&
+        (activeCategory ? location.category === activeCategory : true) &&
+        (activeFilter ? location.label.includes(activeFilter) : true)
+      );
+    });
+
+    // Add filtered markers to the map
+    filteredLocations.forEach(({ latitude, longitude, label }) => {
       L.marker([latitude, longitude])
         .addTo(map)
         .bindPopup(label);
@@ -63,7 +75,7 @@ export default function Home() {
     return () => {
       map.remove();
     };
-  }, []);
+  }, [activeType, activeCategory, activeFilter]); // Re-run effect when any filter changes
 
   return (
     <div className="bg-light-background text-light-text dark:bg-dark-background dark:text-dark-text p-16 px-36">
@@ -98,7 +110,7 @@ export default function Home() {
           {/* Type Column */}
           <div className="mt-4">
             <label className="block text-lg font-semibold mb-2">Type:</label>
-            {['Minyam', 'Business', 'Resturants'].map((filter) => (
+            {['Minyam', 'Business', 'Restaurants'].map((filter) => (
               <button
                 key={filter}
                 onClick={() => toggleType(filter)}
