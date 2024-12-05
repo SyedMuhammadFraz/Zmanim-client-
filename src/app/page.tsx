@@ -1,5 +1,6 @@
-'use client'; // Ensures this code is client-side only
+'use client'; // Ensure this is a client-side component
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -12,41 +13,25 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
 
-export default function Home() {
-  // Set separate active states for each column
+const Home = () => {
   const [activeType, setActiveType] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-
-  // Toggle active state for Type column
-  const toggleType = (filter: string) => {
-    setActiveType(prev => (prev === filter ? null : filter));
-  };
-
-  // Toggle active state for Category column
-  const toggleCategory = (filter: string) => {
-    setActiveCategory(prev => (prev === filter ? null : filter));
-  };
-
-  // Toggle active state for Filters column
-  const toggleFilter = (filter: string) => {
-    setActiveFilter(prev => (prev === filter ? null : filter));
-  };
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // Check if window is available (to prevent SSR issues)
-    if (typeof window === "undefined") return;
+    setIsClient(true); // Ensures the code runs only on the client
+  }, []);
 
-    // Initialize the map
+  useEffect(() => {
+    if (!isClient) return; // Guard for SSR
     const map = L.map("map").setView([40.7128, -74.006], 12);
 
-    // Add OpenStreetMap tiles
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution: '© OpenStreetMap contributors',
     }).addTo(map);
 
-    // Example locations with types (these could be dynamic in a real app)
     const allLocations = [
       { latitude: 40.7128, longitude: -74.006, label: "New York", type: "Business", category: "Retail" },
       { latitude: 40.7306, longitude: -73.9352, label: "Brooklyn", type: "Retail", category: "Food" },
@@ -55,7 +40,6 @@ export default function Home() {
       { latitude: 40.749, longitude: -73.9877, label: "Madison Square", type: "Restaurants", category: "Service" }
     ];
 
-    // Filter locations based on active filters
     const filteredLocations = allLocations.filter(location => {
       return (
         (activeType ? location.type === activeType : true) &&
@@ -64,18 +48,22 @@ export default function Home() {
       );
     });
 
-    // Add filtered markers to the map
     filteredLocations.forEach(({ latitude, longitude, label }) => {
       L.marker([latitude, longitude])
         .addTo(map)
         .bindPopup(label);
     });
 
-    // Cleanup map on component unmount
     return () => {
       map.remove();
     };
-  }, [activeType, activeCategory, activeFilter]); // Re-run effect when any filter changes
+  }, [isClient, activeType, activeCategory, activeFilter]);
+
+  const toggleType = (filter: string) => setActiveType(prev => (prev === filter ? null : filter));
+  const toggleCategory = (filter: string) => setActiveCategory(prev => (prev === filter ? null : filter));
+  const toggleFilter = (filter: string) => setActiveFilter(prev => (prev === filter ? null : filter));
+
+  if (!isClient) return null; // Prevent rendering on the server
 
   return (
     <div className="bg-light-background text-light-text dark:bg-dark-background dark:text-dark-text p-16 px-36">
@@ -158,4 +146,6 @@ export default function Home() {
       </div>
     </div>
   );
-}
+};
+
+export default dynamic(() => Promise.resolve(Home), { ssr: false });
